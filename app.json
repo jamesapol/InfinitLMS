@@ -1,15 +1,16 @@
 {
   "expo": {
-    "name": "InfinitLMS",
-    "slug": "InfinitLMS",
+    "name": "infinitLMS",
+    "scheme": "infinitlms",
+    "slug": "infinitLMS",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/infinit-lms-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/infinit-lms-splash-screen.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#313131"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -18,10 +19,16 @@
       "supportsTablet": true
     },
     "android": {
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/infinit-lms-adaptive-icon.png",
+        "backgroundColor": "#313131"
       }
+    },
+    "backgroundColor": "#313131",
+    "androidStatusBar": {
+      "backgroundColor": "#fff0",
+      "translucent": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
