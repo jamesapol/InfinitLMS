@@ -1,10 +1,17 @@
-import { FlatList, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, Modal, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { FontAwesome5 } from '@expo/vector-icons';
 import React, { useState } from 'react'
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import moment from 'moment/moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from 'expo-file-system';
+import AssignmentModal from '../AssignmentModal/AssignmentModal';
+import { WebView } from 'react-native-webview';
+import { MaterialIcons } from '@expo/vector-icons';
+import AssignmentCard from '../ActivityCardsType/AssignmentCard/AssignmentCard';
+import YoutubeCard from '../ActivityCardsType/YoutubeCard/YoutubeCard';
+import FileCard from '../ActivityCardsType/FileCard/FileCard';
 
 export default function ModuleCard({
     bg,
@@ -15,6 +22,15 @@ export default function ModuleCard({
     userClasses,
     onPress
 }) {
+    const [assignmentModalVisible, setAssignmentModalVisible] = useState(false)
+
+    //for assignment title, description and id
+    const [actTitle, setActTitle] = useState();
+    const [actDescription, setActDescription] = useState();
+    const [actID, setActID] = useState();
+    const [actUUID, setActUUID] = useState();
+    const [actDateCreated, setActDateCreated] = useState();
+    const [actDueDate, setActDueDate] = useState();
 
     const moduleImage = ({ dataType }) => {
         let imgSource;
@@ -57,7 +73,8 @@ export default function ModuleCard({
     const selectPDF = async () => {
         let result = await DocumentPicker.getDocumentAsync({
             // type: ["image/jpeg", "image/png", "application/pdf"],
-            type: "application/pdf",
+            // type: ["application/msword", "application/docx"],
+            type: ["application/*"],
         });
         console.log(result);
         if (result.uri) {
@@ -74,175 +91,65 @@ export default function ModuleCard({
         }
     };
 
+    const removeFile = () => {
+        setFileURI();
+        setFileSize();
+        setFileName();
+        setFileType();
+    }
+
+    const closeAssignmentModal = () => {
+        setAssignmentModalVisible(false)
+    }
+
     return (
-        // <>
-        //     <TouchableOpacity onPress={() => console.log(item)}>
-        //         <Text>
-        //             TEST
-        //         </Text>
-        //     </TouchableOpacity>
-        // </>
-        // <Text>
-        //     {item.secID_content}
-        //    {JSON.stringify(item.secID_content)} 
-        // </Text>
-        <FlatList
-            key={Math.random()}
-            // numColumns={2}
-            data={item}
-            keyExtractor={(item) => `${item.actID}`}
-            renderItem={({ item, index }) => (
-                <View style={{ paddingHorizontal: '2.5%' }}>
+        <View>
+            <Modal
+                animationType='fade'
+                transparent
+                onRequestClose={closeAssignmentModal}
+                visible={assignmentModalVisible}
+            >
+                <AssignmentModal
 
-                    <View style={{ flex: 1, justifyContent: 'center', marginBottom: '5%', backgroundColor: '#FFF', elevation: 4 }}>
+                />
 
-                        {/* header */}
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: '2.5%', paddingVertical: '1.5%', backgroundColor: '#313131', }}>
-                            <Text style={{ fontSize: RFPercentage(1.7), fontWeight: 'bold', color: "#FFF" }}>
-                                {`${item.actTitle}`}
-                            </Text>
-                        </View>
+            </Modal>
+            <FlatList
+                key={Math.random()}
+                // numColumns={2}
+                data={item}
+                keyExtractor={(item) => `${item.actID}`}
+                renderItem={({ item, index }) => (
+                    <View style={{ paddingHorizontal: '2.5%' }}>
+                        {item.typID === 1 ?
+                            <AssignmentCard
+                                item={item}
+                            /> :
+                            
 
-                        {/* body */}
-                        <View style={{ padding: '2.5%', alignItems: 'flex-start' }}>
-                            {/* for assignments */}
-                            {item.typID === 1 ?
-                                <>
-                                    <View style={{ width: '100%', elevation: 7, backgroundColor: '#fff', padding: '2.5%', borderRadius: 7 }}>
-                                        {item.actDescription ?
-                                            <View style={{ width: '90%' }}>
-                                                <Text style={{fontSize: RFPercentage(1.1)}}>
-                                                    {item.actDescription}
-                                                </Text>
-                                            </View>
-                                            : null}
-                                    </View>
-                                    <View style={{width:'100%', elevation: 7, backgroundColor:'#FFF', padding: '2.5%', marginTop: '2.5%', borderRadius: 7}}>
-
-                                    </View>
-                                </>
-                                :
-                                // for other file types
-                                <>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'center', borderRadius: 7, padding: '2%', backgroundColor: '#fff' }}>
-                                        {item.actFileIcon === 'far fa-file-powerpoint' ?
-                                            <FontAwesome5 name="file-powerpoint" size={RFPercentage(7)} color="#313131" />
-                                            : item.actFileIcon === 'far fa-file-pdf' ?
-                                                <FontAwesome5 name="file-pdf" size={RFPercentage(7)} color="#313131" />
-                                                : item.actFileIcon === 'far fa-file-word' ?
-                                                    <FontAwesome5 name="file-word" size={24} color="black" />
-                                                    : null}
-                                        <View style={{ marginLeft: '2.5%', }}>
-                                            <Text style={{ fontSize: RFPercentage(1.75), fontWeight: 'bold' }}>
-                                                {item.actFileType}
-                                            </Text>
-                                            {item.actDescription ?
-                                                <View style={{ width: '90%' }}>
-                                                    <Text>
-                                                        {item.actDescription}
-                                                    </Text>
-                                                </View>
-                                                :
-                                                <View style={{ width: '90%' }}>
-                                                    <Text>
-                                                        No description.
-                                                    </Text>
-                                                </View>}
-                                        </View>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
-                                        <TouchableOpacity style={{ paddingHorizontal: '2.5%', width: '15%', paddingVertical: '1%', borderWidth: 2, elevation: 7, borderRadius: 7, margin: 5, borderColor: '#313131', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
-                                            <Text style={{}}>
-                                                {/* View File */}
-                                                <FontAwesome5 name="eye" size={RFPercentage(2)} color="#ff6b00" />
-                                            </Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={{ paddingHorizontal: '2.5%', width: '15%', paddingVertical: '1%', borderWidth: 2, elevation: 7, borderRadius: 7, margin: 5, borderColor: '#313131', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
-                                            <Text>
-                                                {/* Download File */}
-                                                <FontAwesome5 name="download" size={RFPercentage(2)} color="#ff6b00" />
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </>
-                            }
-
-                        </View>
-
-
-                        {/* footer */}
-                        <View style={{ backgroundColor: '#bbb', flexDirection: 'row', justifyContent: 'flex-end', padding: '1.5%', alignItems: 'center', }}>
-                            <Text style={{ fontSize: RFPercentage(1.3) }}>
-                                {moment(item.actDateCreated).fromNow()}{" "}
-                                <MaterialCommunityIcons name="clock" size={RFPercentage(1.5)} color="#313131" />
-                            </Text>
-                            <Text>
-                            </Text>
-                        </View>
-                    </View>
-                </ View>
-            )}
-        />
+                            item.typID === 3 ?
+                                <FileCard
+                                    item={item}
+                                /> :
+                                item.typID === 5 ?
+                                    <YoutubeCard
+                                        item={item}
+                                    /> : null}
+                    </ View>
+                )}
+            />
+        </View>
     )
 }
 
 const styles = StyleSheet.create({
-    ImageBackground: {
-        flex: 1,
-        backgroundColor: '#fff',
-        elevation: 5,
-        marginHorizontal: '2.5%',
-        marginBottom: '5%',
-        borderRadius: 15,
+    moduleCardContainer: {
+        flex: 1, justifyContent: 'center', marginBottom: '5%', backgroundColor: '#FFF', elevation: 4
     },
 
-    courseTitleAndCodeContainer: {
-        // height: 125,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        borderTopEndRadius: 15,
-        borderTopStartRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: '5%'
-    },
-
-    courseTitleAndCode: {
-        paddingTop: 10,
-        marginVertical: 7.5,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-
-    otherDetailsContainer: {
-        // height: columnCount === 1 ? 225 : 275,
-        justifyContent: 'space-between',
-        borderBottomEndRadius: 15,
-        borderBottomStartRadius: 15,
-        backgroundColor: '#fff',
-        // paddingHorizontal: this.columnCount === 1 ? '2.5%' : '5%',
-    },
-
-    classDetails: {
-        paddingLeft: 10,
-        fontSize: RFPercentage(1.7)
-    },
-
-    rowDetails: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-
-    viewButton: {
-        margin: 10,
-        backgroundColor: '#f66b00',
-        width: '100%',
-        height: 50,
-        // height: '70%',
-        paddingVertical: 5,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        alignSelf: 'center'
+    moduleCardHeader: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: '2.5%', paddingVertical: '1.5%', backgroundColor: '#313131',
     }
 })
 
@@ -254,3 +161,53 @@ const styles = StyleSheet.create({
         {" "}{moment(item.actDateEnd).format('MMMM D, YYYY, h:m A')}
     </Text>
 </Text> */}
+
+
+{/* <View style={{ width: '100%', elevation: 7, backgroundColor: '#fff', padding: '2.5%', marginBottom: '2.5%', borderRadius: 7, borderWidth: 2, borderColor: '#dc3545' }}>
+    
+                                        </View> */}
+{/* <Text style={{ fontSize: RFPercentage(1.75), fontWeight: 'bold', marginBottom: '2.5%' }}>
+                                            <MaterialIcons name="assignment" size={24} color="black" />Assignment
+                                        </Text>
+                                        {item.actDescription ?
+                                            <View style={{ width: '90%' }}>
+                                                <Text style={{ fontSize: RFPercentage(1.1) }}>
+                                                    {item.actDescription}
+                                                </Text>
+                                            </View>
+                                            : null}
+                                        <View style={{ justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingVertical: '2.5%', marginTop: '2.5%' }}>
+                                            <View style={{ flex: 1, maxWidth: '75%', height: '100%', }}>
+                                                {fileName ?
+                                                    <Text numberOfLines={2}>
+                                                        {fileName}
+                                                    </Text>
+                                                    : null}
+                                            </View>
+                                            <View style={{ flexDirection: 'row' }}>
+                                                {fileURI ?
+                                                    <TouchableOpacity style={{ marginRight: '1%', marginTop: '2.5%', paddingHorizontal: '2.5%', width: '15%', paddingVertical: '1%', borderWidth: 2, elevation: 7, borderRadius: 7, borderColor: '#313131', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}
+                                                        onPress={removeFile}
+                                                    >
+                                                        <Text>
+                                                            <MaterialCommunityIcons name="file-remove" size={RFPercentage(2)} color="red" />
+                                                        </Text>
+                                                    </TouchableOpacity> : null}
+                                                <TouchableOpacity style={{ marginLeft: fileURI ? '1%' : 0, marginTop: '2.5%', paddingHorizontal: '2.5%', width: '15%', paddingVertical: '1%', borderWidth: 2, elevation: 7, borderRadius: 7, borderColor: '#313131', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}
+                                                    onPress={selectPDF}
+                                                >
+                                                    <Text>
+                                                        <FontAwesome5 name="upload" size={RFPercentage(2)} color="#ff6b00" />
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                        {fileURI ?
+                                            <View style={{ marginTop: '2.5%', alignSelf: 'flex-end' }}>
+                                                <TouchableOpacity style={{ paddingHorizontal: '10%', paddingVertical: '1.5%', borderWidth: 2, elevation: 7, borderRadius: 7, borderColor: '#313131', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
+                                                    <Text style={{ fontSize: RFPercentage(1.3) }}>
+                                                        Submit
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View> : null
+                                        } */}

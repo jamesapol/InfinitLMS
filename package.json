@@ -39,7 +39,9 @@
     "react-native-tab-view": "^3.5.1",
     "react-native-timeline-flatlist": "^0.8.0",
     "expo-document-picker": "~11.2.2",
-    "expo-file-system": "~15.2.2"
+    "expo-file-system": "~15.2.2",
+    "react-native-webview": "11.26.0",
+    "expo-av": "~13.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

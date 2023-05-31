@@ -80,8 +80,8 @@ export default function HomeScreen() {
             mode='elevated'
             // label='Add Course'
             color="#313131"
-            onPress={() => courseSheet.current.open()}
-          // onPress={classes}
+            // onPress={() => courseSheet.current.open()}
+          onPress={classes}
           />
 
           <FlatList
