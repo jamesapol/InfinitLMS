@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
         borderColor: '#Ff6b00',
         borderRadius: 15,
         paddingHorizontal: "2%",
-        paddingVertical: "1%",
-        height: '100%',
+        // paddingVertical: 10,
+        // height: 100,
         flex: 1,
         flexDirection: "row",
         // backgroundColor: "#DEE0E2",
@@ -84,6 +84,9 @@ const styles = StyleSheet.create({
     input: {
         fontSize: 18,
         flex: 1,
+        justifyContent:'center',
+        // backgroundColor:'red',
+        height:'100%',
     },
 
     inputLabel: {

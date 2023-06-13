@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system';
 import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import moment from 'moment/moment';
 
-export default function AssignmentCard({ item }) {
+export default function AssignmentCard({ item, onPress }) {
     return (
         <View style={styles.moduleCardContainer}>
 
@@ -46,20 +46,21 @@ export default function AssignmentCard({ item }) {
                                     </Text>
                                 </View>}
                             <View style={{ marginTop: '2.5%' }}>
-                                <Text style={{ fontSize: RFPercentage(1.3) }}>
-                                    Due Date:
+                                {item.actHasDeadline === 1 ?
                                     <Text style={{ fontWeight: 'bold', }}>
-                                        {" "}{moment(item.actDateEnd).format('MMMM D, YYYY, h:mm A')}
-                                    </Text>
-                                </Text>
+                                        Due Date:{" "}
+                                        <Text style={{ fontWeight: 'normal' }}>
+                                            {moment(item.actDateEnd).format('MMMM D, YYYY, h:mm A')}
+                                        </Text>
+                                    </Text> : null}
                             </View>
                         </View>
                     </View>
 
 
-                    <TouchableOpacity style={styles.moduleOpenButton}>
+                    <TouchableOpacity style={styles.moduleOpenButton} onPress={onPress}>
                         <Text style={{ fontSize: RFPercentage(1.3), fontWeight: 'bold' }}>
-                            Open Assignment
+                            Submit Assignment
                         </Text>
                     </TouchableOpacity>
                 </>
@@ -82,7 +83,7 @@ export default function AssignmentCard({ item }) {
 
 const styles = StyleSheet.create({
     moduleCardContainer: {
-        flex: 1, justifyContent: 'center', marginBottom: '5%', backgroundColor: '#FFF', elevation: 4
+        flex: 1, justifyContent: 'center', marginBottom: '5%', backgroundColor: '#FFF', elevation: 4,
     },
 
     moduleCardHeader: {

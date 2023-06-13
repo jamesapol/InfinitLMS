@@ -10,7 +10,7 @@ export default function App() {
     <AuthProvider>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar backgroundColor="#313131" translucent={true} style='light' />
-        <NavigationContainer>
+        <NavigationContainer> 
           <Navigation />
         </NavigationContainer>
       </SafeAreaView>

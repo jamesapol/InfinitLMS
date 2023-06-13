@@ -13,6 +13,7 @@ import { BASE_URL } from '../../../config';
 import axios from 'axios';
 import Skeleton from '../../../components/Skeleton/Skeleton';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import CustomInput from '../../../components/CustomInput/CustomInput';
 
 // import { FlashList } from "@shopify/flash-list";
 var { width } = Dimensions.get("window");
@@ -22,12 +23,12 @@ export default function HomeScreen() {
   const { user, userToken, userClasses, getStudentCourses, coursesLoading, setCoursesLoading } = useContext(AuthContext);
   const [columnCount, setColumnCount] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchKey, setSearchKey] = useState()
+  const [searchKey, setSearchKey] = useState('')
   const courseSheet = useRef();
 
   const navigation = useNavigation();
   const handleSearch = (text) => {
-
+    setSearchKey(text)
   }
 
   const toggleColumns = () => {
@@ -56,32 +57,29 @@ export default function HomeScreen() {
 
       {coursesLoading ? <Skeleton skeletonType="courses" /> :
         <>
-          <View style={{ height: '5%', alignItems: 'center', justifyContent: 'center', marginVertical: 15, }}>
-            <View style={{ flexDirection: 'row', width: '95%', height: '100%', }}>
-              <CustomSearch
-                placeholder="Search Course"
-                value={searchKey}
-                onChangeText={(text) => setSearchKey(text)}
-                child={
-                  <Ionicons name="search" size={24} color={"#000"} />
-                }
-              />
-              {/* <View style={{ height: '100%', width: '10%', }}>
+          <View style={{ alignItems: 'center', justifyContent: 'center', marginVertical: 10, paddingHorizontal: '2.5%', height: 50 }}>
+            <CustomSearch
+              placeholder="Search Course"
+              value={searchKey}
+              onChangeText={handleSearch}
+              prefixChild={
+                <Ionicons name="search" size={24} color={"#000"} style={{ paddingRight: '1%' }} />
+              }
+            />
+            {/* <View style={{ height: '100%', width: '10%', }}>
             <TouchableOpacity style={{ height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center' }} onPress={toggleColumns}>
               <Ionicons name={columnCount === 1 ? 'ios-grid-outline' : 'ios-list'} size={40} color="#FF6b00" />
             </TouchableOpacity>
           </View> */}
-            </View>
           </View>
 
           <FAB icon="plus"
             animated
             style={styles.fab}
             mode='elevated'
-            // label='Add Course'
             color="#313131"
-            // onPress={() => courseSheet.current.open()}
-          onPress={classes}
+            onPress={() => courseSheet.current.open()}
+          // onPress={classes}
           />
 
           <FlatList
@@ -89,6 +87,9 @@ export default function HomeScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
             }
             // overScrollMode='never'
+            // ListHeaderComponent={() => (
+
+            // )}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1, marginBottom: '15%', paddingBottom: '15%' }}
             data={userClasses}
@@ -103,7 +104,7 @@ export default function HomeScreen() {
                   userClasses={userClasses}
                   columnCount={columnCount}
                   // onPress={() => console.log(item)}
-                  onPress={() => navigation.navigate("ViewCourseScreen", { course: item })}
+                  onPress={() => navigation.navigate("Modules", { course: item })}
                 // onPress={() => navigation.navigate("ViewCourseScreen", { course: item })}
                 // onPress={getStudentCourses}
                 />
@@ -128,10 +129,8 @@ export default function HomeScreen() {
             width: "50%",
           },
           container: {
-            borderTopLeftRadius: 50,
-            borderTopRightRadius: 50,
-            borderColor: '#313131',
-            borderWidth: 2,
+            borderTopLeftRadius: 25,
+            borderTopRightRadius: 25,
             elevation: 11,
           },
         }}

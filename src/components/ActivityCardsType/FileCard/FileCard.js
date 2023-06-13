@@ -1,14 +1,77 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
-import React from 'react'
+import { StyleSheet, Text, View, TouchableOpacity, Vibration, Modal } from 'react-native'
+import React, { useState } from 'react'
 import { RFPercentage } from 'react-native-responsive-fontsize'
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from 'expo-file-system';
 import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { shareAsync } from 'expo-sharing';
 import moment from 'moment/moment';
 
-export default function FileCard({ item }) {
+import * as Sharing from 'expo-sharing';
+
+import * as WebBrowser from "expo-web-browser";
+import { BASE_URL } from '../../../config';
+import ErrorModal from '../../Modals/ErrorModal/ErrorModal';
+
+
+export default function FileCard({ item, onDownloadPressed, errorModal }) {
+
+  const [errorModalVisible, setErrorModalVisible] = useState(true);
+
+
+
+  // KUNG OKAY LANG KAY SIR NA SA BROWSER I-DOWNLOAD ANG FILES
+  // const openFile = async (fileID) => {
+  //   try {
+  //     // await WebBrowser.openBrowserAsync(`${BASE_URL}/files/activities/${fileID}`)
+  //     await WebBrowser.openBrowserAsync(`https://www.infinit-lms.com/files/activities/1.pdf`)
+  //   } catch (error) {
+  //     console.warn("Broken Links");
+  //   }
+  // }
+
+  // PAG GUSTO NI SIR NA SA APP LANG MISMO
+  const downloadFile = async (file, fileName) => {
+    const result = await FileSystem.downloadAsync(
+      `${BASE_URL}/files/activities/${file}`,
+      FileSystem.documentDirectory + file
+    );
+    console.log(result)
+    if (result.status === 404) {
+      // errorModal(true)
+    } else if (result.status === 200) {
+      save(result.uri, file, result.headers["Content-type"] || result.headers["Content-Type"] || result.headers["content-type"]);
+    }
+  }
+
+  const save = async (uri, fileName, mimeType) => {
+    console.log(uri + fileName + mimeType);
+    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+    if (permissions.granted) {
+      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, mimeType)
+        .then(async (uri) => {
+          await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 });
+        }).catch(e => {
+          console.log(e)
+        });
+    }
+  }
+
+
   return (
     <View style={styles.moduleCardContainer}>
+
+      {/* <Modal
+        animationType='fade'
+        transparent
+        onRequestClose={() => { setErrorModalVisible(false) }}
+        visible={errorModalVisible}
+      >
+        <ErrorModal
+        />
+      </Modal> */}
+
 
       {/* header */}
       <View style={styles.moduleCardHeader}>
@@ -37,13 +100,13 @@ export default function FileCard({ item }) {
                 {item.actDescription ?
                   <View style={{ width: '90%', flex: 1 }}>
                     {/* 
-                                    <WebView    
-                                    
-                                        style={{flex: 1, width: '100%'}}
-                                        minimumFontSize={46}
-                                        // originWhitelist={['*']}
-                                        source={{ html: item.actDescription,  }}
-                                    /> */}
+                    <WebView    
+                    
+                        style={{flex: 1, width: '100%'}}
+                        minimumFontSize={46}
+                        // originWhitelist={['*']}
+                        source={{ html: item.actDescription,  }}
+                    /> */}
                     <Text>
                       {item.actDescription}
                     </Text>
@@ -57,29 +120,25 @@ export default function FileCard({ item }) {
               </View>
               <View style={{ marginTop: '2.5%' }}>
                 <Text style={{ fontSize: RFPercentage(1.3) }}>
-                  Due Date:
-                  <Text style={{ fontWeight: 'bold', }}>
-                    {" "}{moment(item.actDateEnd).format('MMMM D, YYYY, h:mm A')}
-                  </Text>
+                  {item.actHasDeadline === 1 ?
+                    <Text style={{ fontWeight: 'bold', }}>
+                      Due Date:{" "}
+                      moment(item.actDateEnd).format('MMMM D, YYYY, h:mm A')
+                    </Text> : null}
                 </Text>
               </View>
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
-            <TouchableOpacity style={{ paddingHorizontal: '2.5%', width: '15%', paddingVertical: '1%', borderWidth: 2, elevation: 7, borderRadius: 7, margin: '1.5%', borderColor: '#313131', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
-              <Text style={{}}>
-                {/* View File */}
-                <FontAwesome5 name="eye" size={RFPercentage(2)} color="#ff6b00" />
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={{ paddingHorizontal: '2.5%', width: '15%', paddingVertical: '1%', borderWidth: 2, elevation: 7, borderRadius: 7, margin: '1.5%', borderColor: '#313131', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
-              <Text>
-                {/* Download File */}
-                <FontAwesome5 name="download" size={RFPercentage(2)} color="#ff6b00" />
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.moduleOpenButton}
+            onPress={onDownloadPressed}
+          // onPress={() => { downloadFile(item.actFile, item.actTitle) }}
+          >
+            {/* <FontAwesome5 name="download" size={RFPercentage(2)} color="#ff6b00" /> */}
+            <Text style={{ fontSize: RFPercentage(1.3), fontWeight: 'bold', }}>
+              Download File
+            </Text>
+          </TouchableOpacity>
         </>
 
 

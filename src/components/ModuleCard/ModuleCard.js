@@ -1,6 +1,6 @@
-import { FlatList, Modal, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, Modal, ImageBackground, StyleSheet, Text, TouchableOpacity, View, TouchableWithoutFeedback } from 'react-native'
 import { FontAwesome5 } from '@expo/vector-icons';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import moment from 'moment/moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,145 +12,202 @@ import { MaterialIcons } from '@expo/vector-icons';
 import AssignmentCard from '../ActivityCardsType/AssignmentCard/AssignmentCard';
 import YoutubeCard from '../ActivityCardsType/YoutubeCard/YoutubeCard';
 import FileCard from '../ActivityCardsType/FileCard/FileCard';
+import { BASE_URL } from '../../config';
+import ErrorModal from '../Modals/ErrorModal/ErrorModal';
+import FacebookCard from '../ActivityCardsType/FacebookCard/FacebookCard';
+import TextCard from '../ActivityCardsType/TextCard/TextCard';
+import LinkCard from '../ActivityCardsType/LinkCard/LinkCard';
 
 export default function ModuleCard({
-    bg,
-    item,
-    columnCount,
-    user,
-    secID_content,
-    userClasses,
-    onPress
+  item,
 }) {
-    const [assignmentModalVisible, setAssignmentModalVisible] = useState(false)
+  const [assignmentModalVisible, setAssignmentModalVisible] = useState(false)
 
-    //for assignment title, description and id
-    const [actTitle, setActTitle] = useState();
-    const [actDescription, setActDescription] = useState();
-    const [actID, setActID] = useState();
-    const [actUUID, setActUUID] = useState();
-    const [actDateCreated, setActDateCreated] = useState();
-    const [actDueDate, setActDueDate] = useState();
+  //for assignment title, description and id
+  const [actTitle, setActTitle] = useState();
+  const [actDescription, setActDescription] = useState();
+  const [actID, setActID] = useState();
+  const [actUUID, setActUUID] = useState();
+  const [actDateCreated, setActDateCreated] = useState();
+  const [actDueDate, setActDueDate] = useState();
 
-    const moduleImage = ({ dataType }) => {
-        let imgSource;
+  const [downloading, setDownloading] = useState(false);
 
-        if (dataType == 3) {
-            imgSource = require('../../../assets/images/icons/ppt.png')
-        }
+  const [fileURI, setFileURI] = useState();
+  const [fileSize, setFileSize] = useState();
+  const [fileName, setFileName] = useState();
+  const [fileType, setFileType] = useState();
+
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+
+  ///////////////////////////////////////////////////////////////////////
+  //
+  //FOR FILE UPLOADS
+  //
+  ///////////////////////////////////////////////////////////////////////
+  const selectPDF = async () => {
+
+    let result = await DocumentPicker.getDocumentAsync({
+      // type: ["image/jpeg", "image/png", "application/pdf"],
+      // type: ["application/msword", "application/docx"],
+      // type: ["application/pptx"],
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    console.log(result);
+    if (result.uri) {
+      const fileInfo = await FileSystem.getInfoAsync(result.uri);
+      if (fileInfo.size >= 5000000) {
+        // setFileSizeErrorModalVisible(true);
+      } else {
+        setFileURI(result.uri);
+        setFileSize(result.size);
+        setFileName(result.name);
+        setFileType(result.mimeType);
+        setAssignmentModalVisible(true);
+      }
     }
+  };
 
-    const convertTo12HourFormat = (time) => {
-        const [hours, minutes] = time.split(':');
-        let period = 'AM';
-        let formattedHours = parseInt(hours, 10);
+  const removeFile = () => {
+    setFileURI();
+    setFileSize();
+    setFileName();
+    setFileType();
+  }
+  ///////////////////////////////////////////////////////////////////////
 
-        if (formattedHours >= 12) {
-            period = 'PM';
-            formattedHours = formattedHours === 12 ? 12 : formattedHours - 12;
-        } else if (formattedHours === 0) {
-            formattedHours = 12;
-        }
 
-        return `${formattedHours}:${minutes} ${period}`;
-    };
+  ///////////////////////////////////////////////////////////////////////
+  //
+  //FOR FILE DOWNLOADS
+  //
+  ///////////////////////////////////////////////////////////////////////
+  const downloadFile = async (file, fileName) => {
+    const result = await FileSystem.downloadAsync(
+      `${BASE_URL}/files/activities/${file}`,
+      FileSystem.documentDirectory + file
+    );
+    console.log(result)
+    if (result.status === 404) {
+      // onDownloadError(true);
+      setErrorModalVisible(true);
+      // console.warn("Not found")
+    } else if (result.status === 200) {
+      save(result.uri, file, result.headers["Content-type"] || result.headers["Content-Type"] || result.headers["content-type"]);
+    }
+  }
 
-    data = [
-        { time: '09:00', description: 'Event 1 Description', crsTitle: 'Event 1', },
-        { time: '10:45', crsTitle: 'Event 2', description: 'Event 2 Description' },
-        { time: '12:00', crsTitle: 'Event 3', description: 'Event 3 Description' },
-        { time: '14:00', crsTitle: 'Event 4', description: 'Event 4 Description' },
-        { time: '16:30', crsTitle: 'Event 5', description: 'Event 5 Description' }
-    ]
-
-    const handlePress = () => setExpanded(!expanded);
-
-    const [fileURI, setFileURI] = useState();
-    const [fileSize, setFileSize] = useState();
-    const [fileName, setFileName] = useState();
-    const [fileType, setFileType] = useState();
-
-    const selectPDF = async () => {
-        let result = await DocumentPicker.getDocumentAsync({
-            // type: ["image/jpeg", "image/png", "application/pdf"],
-            // type: ["application/msword", "application/docx"],
-            type: ["application/*"],
+  const save = async (uri, fileName, mimeType) => {
+    console.log(uri + fileName + mimeType);
+    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+    if (permissions.granted) {
+      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, mimeType)
+        .then(async (uri) => {
+          await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 });
+        }).catch(e => {
+          console.log(e)
         });
-        console.log(result);
-        if (result.uri) {
-            const fileInfo = await FileSystem.getInfoAsync(result.uri);
-            if (fileInfo.size >= 5000000) {
-                setFileSizeErrorModalVisible(true);
-            } else {
-                setFileURI(result.uri);
-                setFileSize(result.size);
-                setFileName(result.name);
-                setFileType(result.mimeType);
+    }
+  }
+  // const downloadFile = async (fileName) => {
+  //   const result = await FileSystem.downloadAsync(
+  //     `https://www.infinit-lms.com/files/activities/${fileName}`,
+  //     FileSystem.documentDirectory + fileName,
+  //   )
+  // }
+  ///////////////////////////////////////////////////////////////////////
 
+  const closeAssignmentModal = () => {
+    setAssignmentModalVisible(false)
+    removeFile();
+  }
+
+  const handleErrorModal = (val) => {
+    setErrorModalVisible(val);
+  }
+
+  const closeErrorModal = () => {
+    setErrorModalVisible(false)
+  }
+
+
+  return (
+    <View>
+      <Modal
+        animationType='fade'
+        transparent
+        onRequestClose={closeAssignmentModal}
+        visible={assignmentModalVisible}
+      >
+        <AssignmentModal
+          fileName={fileName}
+          actTitle={actTitle}
+          actUuid={actUUID}
+          onClosePressed={closeAssignmentModal}
+          onOutsidePress={() => { setAssignmentModalVisible(false) }}
+        />
+      </Modal>
+
+      <Modal
+        animationType='fade'
+        transparent
+        onRequestClose={closeErrorModal}
+        visible={errorModalVisible}
+      >
+        <TouchableOpacity
+          onPress={closeErrorModal}
+          activeOpacity={1}
+          style={{ backgroundColor: "#0000", flex: 1 }}>
+
+          <ErrorModal
+          />
+        </TouchableOpacity>
+      </Modal>
+
+
+      <FlatList
+        key={Math.random()}
+        // numColumns={2}
+        data={item}
+        keyExtractor={(item) => `${item.actID}`}
+        renderItem={({ item, index }) => (
+          <View style={{ paddingHorizontal: '2.5%' }}>
+
+            {item.typID === 1 ?
+              <AssignmentCard
+                item={item}
+                onPress={() => {
+                  selectPDF()
+                  setActTitle(item.actTitle)
+                }} />
+              : item.typID ===2 ?
+                <LinkCard item={item} />
+                : (item.typID === 3 || item.typID === 14) ?
+                  <FileCard onDownloadPressed={() => { downloadFile(item.actFile) }} item={item} />
+                  : item.typID === 4 ?
+                    <TextCard item={item} />
+                    : item.typID === 5 ?
+                      <YoutubeCard item={item} />
+                      : item.typID === 6 ?
+                        <FacebookCard item={item} />
+                        : null
             }
-        }
-    };
-
-    const removeFile = () => {
-        setFileURI();
-        setFileSize();
-        setFileName();
-        setFileType();
-    }
-
-    const closeAssignmentModal = () => {
-        setAssignmentModalVisible(false)
-    }
-
-    return (
-        <View>
-            <Modal
-                animationType='fade'
-                transparent
-                onRequestClose={closeAssignmentModal}
-                visible={assignmentModalVisible}
-            >
-                <AssignmentModal
-
-                />
-
-            </Modal>
-            <FlatList
-                key={Math.random()}
-                // numColumns={2}
-                data={item}
-                keyExtractor={(item) => `${item.actID}`}
-                renderItem={({ item, index }) => (
-                    <View style={{ paddingHorizontal: '2.5%' }}>
-                        {item.typID === 1 ?
-                            <AssignmentCard
-                                item={item}
-                            /> :
-                            
-
-                            item.typID === 3 ?
-                                <FileCard
-                                    item={item}
-                                /> :
-                                item.typID === 5 ?
-                                    <YoutubeCard
-                                        item={item}
-                                    /> : null}
-                    </ View>
-                )}
-            />
-        </View>
-    )
+          </ View>
+        )}
+      />
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
-    moduleCardContainer: {
-        flex: 1, justifyContent: 'center', marginBottom: '5%', backgroundColor: '#FFF', elevation: 4
-    },
+  moduleCardContainer: {
+    flex: 1, justifyContent: 'center', marginBottom: '5%', backgroundColor: '#FFF', elevation: 4
+  },
 
-    moduleCardHeader: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: '2.5%', paddingVertical: '1.5%', backgroundColor: '#313131',
-    }
+  moduleCardHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: '2.5%', paddingVertical: '1.5%', backgroundColor: '#313131',
+  }
 })
 
 

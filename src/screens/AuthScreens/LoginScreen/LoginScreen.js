@@ -8,6 +8,7 @@ import WarningModal from '../../../components/Modals/WarningModal/WarningModal';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../../context/AuthContext';
+import { Button } from 'react-native-paper';
 
 
 export default function LoginScreen() {
@@ -74,6 +75,9 @@ export default function LoginScreen() {
                         onPress={onLoginPressed}
                         text="Login"
                     />
+                    {/* <Button mode="contained" onPress={() => console.log('Pressed')} style={{ width: '100%', }} loading={loginLoading} onPressIn={onLoginPressed} buttonColor='#ff6b00'>
+                        {!loginLoading ? "Login" : null}
+                    </Button> */}
                     <Text style={styles.forgotPassword} >Forgot Password?</Text>
                 </View>
             </View>

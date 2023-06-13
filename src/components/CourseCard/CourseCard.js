@@ -97,7 +97,7 @@ export default function CourseCard({
                             {/* <Fontisto name="room" size={RFPercentage(1.7)} color="black" /> */}
                             {/* <FontAwesome5 name="door-closed" size={RFPercentage(1.7.8)} color="black" /> */}
                             <MaterialIcons name="meeting-room" size={RFPercentage(1.7)} color="black" />
-                            <Text style={styles.classDetails}>{item.romName}</Text>
+                            <Text style={styles.classDetails}>{item.romName ?? "Not Specified"}</Text>
                         </View>
                     </View>
                     <View style={{ height: 1, width: '100%', backgroundColor: '#515151', alignSelf: 'center', }} />
@@ -109,11 +109,11 @@ export default function CourseCard({
                         data={item.instructors}
                         keyExtractor={(instructor) => `${instructor.usrLastName}-${instructor.usrFirstName}`}
                         renderItem={({ item: instructor }) => (
-                            <View style={{ flexDirection: 'row', marginVertical: '1%', flex: 1, marginHorizontal: 1, }}>
-                                <View style={{ height: RFPercentage(3.5), width: RFPercentage(3.5), borderRadius: 1000, borderColor: '#ff5b00', borderWidth: 1, marginRight: '2.5%', }}>
+                            <View style={{ flexDirection: 'row', marginVertical: '1%', flex: 1, marginHorizontal: 1, alignItems:'flex-start'}}>
+                                <View style={{ height: RFPercentage(3.5), width: RFPercentage(3.5), borderRadius: 1000, borderColor: '#ff5b00', borderWidth: 1,  }}>
                                     <Image source={{ uri: `${BASE_URL}/images/avatars/${instructor ? instructor.usrImage ? instructor.usrImage : defaultImage : null}` }} style={{ height: '100%', width: '100%', borderRadius: 1000 }} />
                                 </View>
-                                <View style={{ flex: 1, marginVertical: '-1%', paddingBottom: '2.5%' }} >
+                                <View style={{ flex: 1, paddingBottom: '2.5%', marginLeft: 10, }} >
                                     <Text style={{ fontSize: RFPercentage(1.5), fontWeight: 'bold', overflow: 'scroll', }} numberOfLines={2} ellipsizeMode='tail'>
                                         {`${instructor.usrLastName ?? null}, ${instructor.usrFirstName ?? null} ${instructor.usrMiddleName ?? ''}`}
                                     </Text>

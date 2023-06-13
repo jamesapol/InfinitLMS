@@ -1,4 +1,4 @@
-import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { BASE_URL } from '../../../../config';
 import { AuthContext } from '../../../../context/AuthContext';
@@ -11,6 +11,9 @@ import { FAB, List, MD2DarkTheme } from 'react-native-paper';
 import Skeleton from '../../../../components/Skeleton/Skeleton';
 import { MaterialIcons } from '@expo/vector-icons';
 import defaultImage from '../../../../../assets/images/icons/default.png'
+import ErrorModal from '../../../../components/Modals/ErrorModal/ErrorModal';
+import { useNavigation } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native';
 
 export default function ViewCourseScreen({ route }) {
   const { user, userToken, } = useContext(AuthContext)
@@ -21,15 +24,21 @@ export default function ViewCourseScreen({ route }) {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  const navigation = useNavigation();
+
   const handleRefresh = async () => {
     setRefreshing(true)
     await getCourseModules();
     setRefreshing(false)
   }
 
-  // useEffect(() => {
-  //   getCourseModules();
-  // }, [])
+  const onChatsPressed = () => {
+    navigation.navigate("Chats", { courseID: course.crsID })
+  }
+
+  useEffect(() => {
+    getCourseModules();
+  }, [])
 
   const getCourseModules = async () => {
     setModulesLoading(true);
@@ -61,6 +70,7 @@ export default function ViewCourseScreen({ route }) {
     return `${formattedHours}:${minutes} ${period}`;
   };
 
+
   return (
     <View style={{ flex: 1, }}>
 
@@ -72,7 +82,8 @@ export default function ViewCourseScreen({ route }) {
         // label='Messages'
         // customSize={2}
         color="#313131"
-        onPress={() => console.log(modules)}
+        // onPress={() => console.log(modules)}
+        onPress={onChatsPressed}
       />
       <FlatList
         contentContainerStyle={{ flexGrow: 1, marginBottom: '15%', paddingBottom: '15%' }}
@@ -88,13 +99,13 @@ export default function ViewCourseScreen({ route }) {
             marginVertical: '2.5%',
             paddingTop: '5%',
             paddingBottom: ' 7.5%',
-            paddingHorizontal: '5%',
+            paddingHorizontal: '2.5%',
             borderTopLeftRadius: 15,
             borderTopRightRadius: 15,
             justifyContent: 'center',
             alignItems: 'center',
-            // borderColor:'#313131',
-            // borderWidth:2
+            // borderColor: '#313131',
+            // borderWidth: 2,
             // borderRadius: 15,
           }}>
             <Image source={subjectIcon} style={{ height: 100, width: 100, borderRadius: 1000, marginBottom: '2.5%' }} />
@@ -157,16 +168,16 @@ export default function ViewCourseScreen({ route }) {
                 data={course.instructors}
                 keyExtractor={(instructor) => `${instructor.usrLastName}-${instructor.usrFirstName}`}
                 renderItem={({ item: instructor, index }) => (
-                  <View style={{ flexDirection: 'row', marginVertical: '1%', flex: 1, marginHorizontal: 1, }}>
-                    <View style={{ height: RFPercentage(3.5), width: RFPercentage(3.5), borderRadius: 1000, borderColor: '#ff5b00', borderWidth: 1, marginRight: '2.5%', }}>
+                  <View style={{ flexDirection: 'row', marginVertical: '1%', flex: 1, marginHorizontal: 1, alignItems: 'flex-start' }}>
+                    <View style={{ height: RFPercentage(3.5), width: RFPercentage(3.5), borderRadius: 1000, borderColor: '#ff5b00', borderWidth: 1, }}>
                       <Image source={{ uri: `${BASE_URL}/images/avatars/${instructor ? instructor.usrImage ? instructor.usrImage : defaultImage : null}` }} style={{ height: '100%', width: '100%', borderRadius: 1000 }} />
                     </View>
-                    <View style={{ flex: 1, marginVertical: '-1%' }} >
-                      <Text style={{ fontSize: RFPercentage(1.7), fontWeight: 'bold', overflow: 'scroll', }} numberOfLines={2} ellipsizeMode='tail'>
+                    <View style={{ flex: 1, paddingBottom: '2.5%', marginLeft: 10 }} >
+                      <Text style={{ fontSize: RFPercentage(1.5), fontWeight: 'bold', overflow: 'scroll', }} numberOfLines={2} ellipsizeMode='tail'>
                         {`${instructor.usrLastName ?? null}, ${instructor.usrFirstName ?? null} ${instructor.usrMiddleName ?? ''}`}
                       </Text>
 
-                      <Text style={{ fontSize: RFPercentage(1.5), color: '#666' }} ellipsizeMode='tail'>
+                      <Text style={{ fontSize: RFPercentage(1.3), color: '#666' }} ellipsizeMode='tail'>
                         {instructor.typName}
                       </Text>
                     </View>
@@ -178,7 +189,10 @@ export default function ViewCourseScreen({ route }) {
         )}
 
         ListFooterComponent={() => (
-          modulesLoading ? <Skeleton skeletonType="modules" /> : null
+          modulesLoading ?
+          <ActivityIndicator size="large" color="#FF6B00" style={{marginVertical: 15}} />
+            // <Skeleton skeletonType="modules" />
+            : null
         )}
         data={modulesLoading ? null : modules}
         renderItem={({ item, index }) => {
@@ -186,6 +200,7 @@ export default function ViewCourseScreen({ route }) {
             // <></>
             <List.Accordion
               title={item.secTitle}
+              description={item.secDescription}
               // title="TEST"
 
               titleStyle={{
@@ -221,7 +236,7 @@ export default function ViewCourseScreen({ route }) {
                     justifyContent: "center",
                     // alignItems: "center",
                     elevation: 1,
-                    paddingVertical: "5%",
+                    // paddingVertical: "5%",
                     marginBottom: "2.5%",
                     width: '95%',
                     // borderRadius: 15,
@@ -231,12 +246,13 @@ export default function ViewCourseScreen({ route }) {
                   }}
                 >
 
+
                   {item.secID_content.length >= 1 ?
                     <ModuleCard
                       item={item.secID_content}
                     /> :
                     <View style={{ padding: '2.5%', justifyContent: 'center', alignItems: 'center' }}>
-                      <Text style={{ fontSize: RFPercentage(2), textAlign:'center', fontWeight:'bold' }}>Your instructor has not uploaded any files.</Text>
+                      <Text style={{ fontSize: RFPercentage(2), textAlign: 'center', fontWeight: 'bold' }}>Your instructor has not uploaded any files.</Text>
                     </View>
                   }
                 </View>

@@ -45,7 +45,7 @@ export default function CustomButton({
                 backgroundColor ?? { backgroundColor: '#FF6b00' },
                 borderWidth ?? { borderWidth: 1 },
                 borderColor ?? { borderColor: '#ff6b00' },
-                marginVertical ?? { marginVertical: '2.5%'},
+                marginVertical ?? { marginVertical: '2.5%' },
             ]}
         >
             {prefixChild}
@@ -54,8 +54,12 @@ export default function CustomButton({
           style={{ imgStyle, display: source ? "flex" : "none" }}
           resizeMode="contain"
         /> */}
-            {loading == true ? (
-                <ActivityIndicator color={loadingColor} size={18} />
+            {loading ? (
+                <>
+                    <Text style={styles.text}>{" "}</Text>
+                    <ActivityIndicator color={loadingColor} style={{ flex: 1, }} />
+                    <Text style={styles.text}>{" "}</Text>
+                </>
             ) : (
                 <Text style={[
                     styles.text,

@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }) => {
     const [refreshing, setRefreshing] = useState(false);
 
     //Error states
+    const [downloadErrorVisible, setDownloadErrorVisible] = useState(false)
     const [loginErrorVisible, setLoginErrorVisible] = useState(false);
 
 
@@ -72,6 +73,25 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const getUserData = async (userID) => {
+        setLoginLoading(true);
+        // let user = await SecureStore.getItemAsync("user");
+        await axios.get(`${BASE_URL}/api/get_user_data/${userID}/${Device.modelName}`, {
+            headers: { Authorization: `Bearer ${userToken}` },
+        }).then((response) => {
+            console.log(response.data.user)
+            if (response.data.user) {
+                setUser(response.data.user);
+            } else if (response.data.status === 404) {
+                clearAll();
+            }
+            setLoginLoading(false);
+        }).catch((error) => {
+            console.log(error.response)
+            setLoginLoading(false);
+        })
+    }
+
     const logout = async () => {
         clearAll()
         setLogoutLoading(true);
@@ -93,7 +113,7 @@ export const AuthProvider = ({ children }) => {
         await axios.get(`${BASE_URL}/api/get_student_courses/${user.usrID}/${Platform.OS}`, {
             headers: { Authorization: `Bearer ${userToken}` },
         }).then((response) => {
-            console.log(response.data)
+            // console.log(response.data)
             setUserClasses(response.data.userClasses)
             setCoursesLoading(false)
         }).catch((error) => {
@@ -119,12 +139,16 @@ export const AuthProvider = ({ children }) => {
         setSplashLoading(true)
         let user = await SecureStore.getItemAsync("user")
         let userToken = await SecureStore.getItemAsync('userToken');
+
+        let userInfo = JSON.parse(user);
+        let userID = userInfo.usrID;
+        console.log(userInfo.usrID);
         if (userToken && user) {
             console.log(userToken);
-            let userInfo = JSON.parse(user);
             console.log(userInfo)
             setUser(userInfo);
             setUserToken(userToken);
+            getUserData(userID)
             getStudentCourses(userInfo);
             // setUserClasses(JSON.parse(userClasses));
             setSplashLoading(false)
@@ -198,6 +222,8 @@ export const AuthProvider = ({ children }) => {
             // error states
             loginErrorVisible,
             setLoginErrorVisible,
+            downloadErrorVisible,
+            setDownloadErrorVisible
 
         }}>
             {children}
